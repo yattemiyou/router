@@ -1,0 +1,84 @@
+#
+# コンソールの設定
+#
+console character ja.utf8
+console columns 4096
+console lines infinity
+login timer clear
+
+#
+# LANインターフェースの設定
+#
+ip lan1 address ${LAN_IP}/${LAN_NETMASK}
+
+#
+# WANインターフェースの設定
+#
+ip lan2 address ${WAN_IP_LOCAL}
+
+#
+# IPsecの設定
+#
+tunnel select 1
+ ipsec tunnel 101
+  ipsec sa policy 101 1 ${IPSEC_POLICY}
+  ipsec ike keepalive use 1 on
+  ipsec ike local address 1 ${LAN_IP}
+  ipsec ike pre-shared-key 1 text ${PASSWORD}
+  ipsec ike remote address 1 ${WAN_IP_REMOTE}
+ tunnel enable 1
+
+ipsec auto refresh on
+
+#
+# ルーティングの設定
+#
+ip route ${REMOTE_NETWORK} gateway tunnel 1
+
+#
+# フィルタの設定
+#
+ip filter source-route on
+ip filter directed-broadcast on
+
+ip filter 11001 pass ${WAN_IP_REMOTE} ${LAN_IP} icmp
+ip filter 11002 pass ${WAN_IP_REMOTE} ${LAN_IP} udp * 500
+ip filter 11003 pass ${WAN_IP_REMOTE} ${LAN_IP} esp
+
+ip filter 12001 pass ${LAN_IP} ${WAN_IP_REMOTE} icmp
+ip filter 12002 pass ${LAN_IP} ${WAN_IP_REMOTE} udp * 500
+ip filter 12003 pass ${LAN_IP} ${WAN_IP_REMOTE} esp
+
+ip filter 99999 reject-nolog * *
+
+ip lan2 secure filter in 11001 11002 11003 99999
+ip lan2 secure filter out 12001 12002 12003 99999
+
+#
+# NATの設定
+#
+nat descriptor type 1 masquerade
+nat descriptor address outer 1 primary
+nat descriptor masquerade static 1 1 ${LAN_IP} udp 500
+nat descriptor masquerade static 1 2 ${LAN_IP} esp
+
+ip lan2 nat descriptor 1
+
+#
+# サーバー機能の設定
+#
+security class 3 on off off
+
+telnetd service off
+telnetd host none
+
+httpd service off
+httpd host none
+
+sshd service off
+sshd host none
+
+no dhcp service server
+no dhcp server rfc2131 compliant
+
+save

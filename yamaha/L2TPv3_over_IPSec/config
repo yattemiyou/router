@@ -1,0 +1,95 @@
+#
+# コンソールの設定
+#
+console character ja.utf8
+console columns 4096
+console lines infinity
+login timer clear
+
+#
+# LANインターフェースの設定
+#
+no ip lan1 address
+
+#
+# WANインターフェースの設定
+#
+ip lan2 address ${WAN_IP_LOCAL}
+
+#
+# ブリッジインターフェースの設定
+#
+bridge member bridge1 lan1 tunnel1
+ip bridge1 address ${BRIDGE_IP_LOCAL}/${NETMASK}
+
+#
+# L2TPv3/IPsecの設定
+#
+tunnel select 1
+ tunnel encapsulation l2tpv3
+ tunnel endpoint address ${BRIDGE_IP_LOCAL} ${WAN_IP_REMOTE}
+ ipsec tunnel 101
+  ipsec sa policy 101 1 ${IPSEC_POLICY}
+  ipsec ike keepalive use 1 on
+  ipsec ike local address 1 ${BRIDGE_IP_LOCAL}
+  ipsec ike pre-shared-key 1 text ${PASSWORD}
+  ipsec ike remote address 1 ${WAN_IP_REMOTE}
+tunnel enable 1
+l2tp always-on on
+l2tp tunnel disconnect time off
+l2tp keepalive use on
+l2tp local router-id ${BRIDGE_IP_LOCAL}
+l2tp remote router-id ${BRIDGE_IP_REMOTE}
+l2tp remote end-id ${END_ID}
+
+ipsec auto refresh on
+ipsec transport 1 101 udp 1701
+l2tp service on l2tpv3
+
+#
+# フィルタの設定
+#
+ip filter source-route on
+ip filter directed-broadcast on
+
+ip filter 11001 pass ${WAN_IP_REMOTE} ${BRIDGE_IP_LOCAL} icmp
+ip filter 11002 pass ${WAN_IP_REMOTE} ${BRIDGE_IP_LOCAL} udp * 500
+ip filter 11003 pass ${WAN_IP_REMOTE} ${BRIDGE_IP_LOCAL} esp
+
+ip filter 12001 pass ${BRIDGE_IP_LOCAL} ${WAN_IP_REMOTE} icmp
+ip filter 12002 pass ${BRIDGE_IP_LOCAL} ${WAN_IP_REMOTE} udp * 500
+ip filter 12003 pass ${BRIDGE_IP_LOCAL} ${WAN_IP_REMOTE} esp
+
+ip filter 99999 reject-nolog * *
+
+ip lan2 secure filter in 11001 11002 11003 99999
+ip lan2 secure filter out 12001 12002 12003 99999
+
+#
+# NATの設定
+#
+nat descriptor type 1 masquerade
+nat descriptor address outer 1 primary
+nat descriptor masquerade static 1 1 ${BRIDGE_IP_LOCAL} udp 500
+nat descriptor masquerade static 1 2 ${BRIDGE_IP_LOCAL} esp
+
+ip lan2 nat descriptor 1
+
+#
+# サーバー機能の設定
+#
+security class 3 on off off
+
+telnetd service off
+telnetd host none
+
+httpd service off
+httpd host none
+
+sshd service off
+sshd host none
+
+no dhcp service server
+no dhcp server rfc2131 compliant
+
+save

@@ -1,0 +1,16 @@
+clear configuration
+
+console prompt RT2
+
+set BRIDGE_IP_LOCAL=172.16.2.254
+set NETMASK=22
+
+set WAN_IP_LOCAL=10.0.0.2/24
+
+set IPSEC_POLICY="esp aes256-cbc sha256-hmac"
+set PASSWORD=yamaha
+set END_ID=yamaha
+
+set WAN_IP_REMOTE=10.0.0.1
+
+set BRIDGE_IP_REMOTE=172.16.1.254

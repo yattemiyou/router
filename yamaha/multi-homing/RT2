@@ -1,0 +1,18 @@
+clear configuration
+
+console prompt RT2
+
+set LAN_IP=192.168.2.254
+set LAN_NETMASK=24
+
+set WAN1_IP_LOCAL=172.16.1.2/24
+set WAN2_IP_LOCAL=172.16.2.2/24
+
+set IPSEC_POLICY="esp aes256-cbc sha256-hmac"
+set PASSWORD1=yamaha
+set PASSWORD2=yamaha
+
+set WAN1_IP_REMOTE=172.16.1.1
+set WAN2_IP_REMOTE=172.16.2.1
+
+set REMOTE_NETWORK=192.168.1.0/24

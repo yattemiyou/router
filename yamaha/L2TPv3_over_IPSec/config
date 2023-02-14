@@ -1,6 +1,7 @@
 #
 # コンソールの設定
 #
+console prompt ${HOST_NAME}
 console character ja.utf8
 console columns 4096
 console lines infinity
@@ -31,17 +32,22 @@ tunnel select 1
  ipsec tunnel 101
   ipsec sa policy 101 1 ${IPSEC_POLICY}
   ipsec ike keepalive use 1 on
+  ipsec ike keepalive log 1 on
   ipsec ike local address 1 ${BRIDGE_IP_LOCAL}
-  ipsec ike pre-shared-key 1 text ${PASSWORD}
+  ipsec ike pre-shared-key 1 text ${IPSEC_PASSWORD}
   ipsec ike remote address 1 ${WAN_IP_REMOTE}
+ip tunnel tcp mss limit auto
 tunnel enable 1
+l2tp hostname ${HOST_NAME}
+l2tp tunnel auth on ${L2TP_PASSWORD}
 l2tp always-on on
 l2tp tunnel disconnect time off
 l2tp keepalive use on
+l2tp keepalive log on
 l2tp local router-id ${BRIDGE_IP_LOCAL}
 l2tp remote router-id ${BRIDGE_IP_REMOTE}
 l2tp remote end-id ${END_ID}
-
+l2tp syslog on
 ipsec auto refresh on
 ipsec transport 1 101 udp 1701
 l2tp service on l2tpv3
